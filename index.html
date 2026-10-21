@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>For Becca</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    min-height: 100svh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 16px;
+    background: radial-gradient(ellipse at top, #fdf4fa 0%, #f1e4f8 55%, #e4d3f1 100%);
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    color: #4a2e5c;
+    overflow-x: hidden;
+  }
+
+  #garden {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+  }
+
+  #petals {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .card {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 560px;
+    padding: 40px 36px 36px;
+    text-align: center;
+    background: rgba(255, 250, 253, 0.8);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(120, 70, 150, 0.22);
+    animation: rise 1.6s ease 0.3s both;
+  }
+
+  h1 {
+    margin: 0 0 8px;
+    font-family: 'Dancing Script', cursive;
+    font-size: clamp(2.6rem, 9vw, 3.6rem);
+    font-weight: 600;
+    line-height: 1.1;
+    background: linear-gradient(90deg, #d86aa8, #9a6bcd);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .divider {
+    margin: 0 auto 20px;
+    color: #c08ad8;
+    letter-spacing: 0.6em;
+    font-size: 0.9rem;
+  }
+
+  .message p {
+    margin: 0 0 1em;
+    font-size: clamp(1.15rem, 3.8vw, 1.35rem);
+    line-height: 1.6;
+  }
+
+  .signature {
+    margin: 24px 0 0;
+    font-family: 'Dancing Script', cursive;
+    font-size: 1.6rem;
+    color: #9a5fb8;
+  }
+
+  .sway {
+    transform-box: view-box;
+    animation: sway ease-in-out infinite alternate;
+  }
+
+  .petal {
+    position: absolute;
+    top: -20px;
+    border-radius: 60% 0 60% 0;
+    opacity: 0.85;
+    animation: fall linear infinite;
+  }
+
+  @keyframes sway {
+    from { transform: rotate(-1.6deg); }
+    to   { transform: rotate(1.6deg); }
+  }
+
+  @keyframes fall {
+    from { transform: translate(0, -5vh) rotate(0deg); }
+    to   { transform: translate(var(--drift), 110vh) rotate(var(--spin)); }
+  }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sway, .petal, .card { animation: none; }
+    #petals { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<svg id="garden" aria-hidden="true"></svg>
+<div id="petals" aria-hidden="true"></div>
+
+<main class="card">
+  <h1>For Becca</h1>
+  <div class="divider">✿ ✿ ✿</div>
+
+  <div class="message">
+    <!-- ✏️ WRITE YOUR MESSAGE HERE — one <p> per paragraph -->
+    <p>Dear Becca,</p>
+    <p>What means the most is that you love me as if I’m not hard to love, as if I was never too much. When you find the right person, they love you for you, and it’s as easy as breathing. Thank you for being that person. I love you a lot, and I’m happy to take care of this the right way, one day at a time.</p>
+  </div>
+
+  <!-- ✏️ Change the signature -->
+  <p class="signature">Love,<br>Henry Buchanan</p>
+</main>
+
+<script>
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.getElementById('garden');
+
+  // Colors run light -> dark; front florets get the light ones
+  const PINKS   = ['#fde3ee', '#f8c6dd', '#f0a6ca', '#e386b6', '#cf6aa0'];
+  const PURPLES = ['#ecdcf8', '#d6b8f1', '#bd94e2', '#a274d2', '#8558bb'];
+  const LEAF    = ['#6f9b5a', '#5f8a4e', '#7aa866'];
+
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+
+  function el(tag, attrs, parent) {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+
+  // One reusable four-petal floret per color
+  function buildDefs() {
+    const defs = el('defs', {}, svg);
+    [['p', PINKS], ['v', PURPLES]].forEach(([prefix, colors]) => {
+      colors.forEach((c, i) => {
+        const g = el('g', { id: prefix + i }, defs);
+        for (let k = 0; k < 4; k++) {
+          el('ellipse', { cx: 0, cy: -3.4, rx: 2.5, ry: 3.8, fill: c, transform: `rotate(${k * 90})` }, g);
+        }
+        el('circle', { r: 0.9, fill: '#fff4dc' }, g);
+      });
+    });
+  }
+
+  function leaf(parent, x, y, angle, size) {
+    const g = el('g', { transform: `translate(${x} ${y}) rotate(${angle}) scale(${size})` }, parent);
+    el('path', {
+      d: 'M0 0 C-8 -6 -22 -2 -20 -18 C-18 -32 -6 -42 0 -54 C6 -42 18 -32 20 -18 C22 -2 8 -6 0 0Z',
+      fill: pick(LEAF)
+    }, g);
+    el('path', { d: 'M0 -2 L0 -48', stroke: 'rgba(255,255,255,0.35)', 'stroke-width': 1, fill: 'none' }, g);
+  }
+
+  // A lilac spray: stem + leaves + cone-shaped cluster of florets
+  function lilac(layer, x, y, angle, len, stemLen) {
+    const isPink = Math.random() < 0.5;
+    const prefix = isPink ? 'p' : 'v';
+    const shades = (isPink ? PINKS : PURPLES).length;
+
+    const sway = el('g', { class: 'sway' }, layer);
+    sway.style.transformOrigin = `${x}px ${y}px`;
+    sway.style.animationDuration = rand(5, 9) + 's';
+    sway.style.animationDelay = -rand(0, 9) + 's';
+
+    const g = el('g', { transform: `translate(${x} ${y}) rotate(${angle})` }, sway);
+
+    // Stem heads "down" in local space, off past the screen edge
+    const c1 = rand(-30, 30), c2 = rand(-40, 40);
+    el('path', {
+      d: `M0 ${-len * 0.6} L0 0 Q ${c1} ${stemLen / 2} ${c2} ${stemLen}`,
+      stroke: '#5a7f48', 'stroke-width': Math.max(2, len / 60), fill: 'none', 'stroke-linecap': 'round'
+    }, g);
+
+    // Heart-shaped leaves along the stem
+    const leafCount = Math.random() < 0.6 ? 2 : 1;
+    for (let i = 0; i < leafCount; i++) {
+      const u = rand(0.04, 0.16) + i * 0.06;
+      const lx = 2 * u * (1 - u) * c1 + u * u * c2;
+      const ly = 2 * u * (1 - u) * (stemLen / 2) + u * u * stemLen;
+      const side = i % 2 === 0 ? 1 : -1;
+      leaf(g, lx, ly, side * rand(45, 80), len / 110 * rand(0.8, 1.1));
+    }
+
+    // Florets: widest near the base, tapering to a point
+    const maxW = len * 0.3;
+    const count = Math.round(len * 1.7);
+    const florets = [];
+    for (let i = 0; i < count; i++) {
+      const t = Math.pow(Math.random(), 0.9);
+      const w = maxW * Math.pow(1 - t, 0.75) * Math.min(1, (t + 0.08) / 0.28);
+      const fx = (Math.random() * 2 - 1) * w;
+      const fy = -t * len - rand(0, len * 0.04);
+      // Center of the cone sits "in front", edges recede
+      const z = Math.min(1, (1 - Math.abs(fx) / (w + 0.001)) * rand(0.5, 1.2));
+      florets.push({ fx, fy, z, t });
+    }
+    florets.sort((a, b) => a.z - b.z);
+
+    const scaleBase = len / 150;
+    for (const f of florets) {
+      let shade = Math.round((1 - f.z) * (shades - 1) + rand(-1, 1));
+      shade = Math.max(0, Math.min(shades - 1, shade));
+      const s = scaleBase * rand(0.9, 1.35) * (1 - 0.3 * f.t);
+      el('use', {
+        href: '#' + prefix + shade,
+        transform: `translate(${f.fx.toFixed(1)} ${f.fy.toFixed(1)}) rotate(${Math.round(rand(0, 90))}) scale(${s.toFixed(2)})`,
+        opacity: (0.75 + f.z * 0.25).toFixed(2)
+      }, g);
+    }
+  }
+
+  function draw() {
+    const W = window.innerWidth;
+    const H = window.innerHeight;
+    svg.innerHTML = '';
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    buildDefs();
+
+    const S = Math.min(W, H);
+    const size = () => Math.max(70, Math.min(210, S * rand(0.18, 0.28)));
+    const spots = [];
+
+    // Left and right edges
+    const sideCount = Math.max(3, Math.round(H / 160));
+    for (let i = 0; i < sideCount; i++) {
+      const y = H * (0.25 + 0.7 * i / (sideCount - 1)) + rand(-20, 20);
+      spots.push({ x: rand(-0.01, 0.1) * W, y, angle: rand(-35, 5) });
+      spots.push({ x: W - rand(-0.01, 0.1) * W, y: y + rand(-30, 30), angle: rand(-5, 35) });
+    }
+
+    // Along the bottom
+    const bottomCount = Math.max(3, Math.round(W / 130));
+    for (let i = 0; i < bottomCount; i++) {
+      const x = W * (i + 0.5) / bottomCount + rand(-25, 25);
+      spots.push({ x, y: H - rand(0, 0.08) * H, angle: rand(-25, 25) });
+    }
+
+    // Two sprays drooping from the top corners
+    spots.push({ x: rand(0.02, 0.12) * W, y: rand(-10, 20), angle: rand(150, 170) });
+    spots.push({ x: W - rand(0.02, 0.12) * W, y: rand(-10, 20), angle: rand(190, 210) });
+
+    // Small ones in back, big ones in front
+    spots.forEach(s => s.len = size());
+    spots.sort((a, b) => a.len - b.len);
+
+    const layer = el('g', {}, svg);
+    spots.forEach(s => lilac(layer, s.x, s.y, s.angle, s.len, H));
+  }
+
+  function petals() {
+    const box = document.getElementById('petals');
+    const colors = [...PINKS.slice(1, 4), ...PURPLES.slice(1, 4)];
+    for (let i = 0; i < 22; i++) {
+      const p = document.createElement('div');
+      const size = rand(6, 12);
+      p.className = 'petal';
+      p.style.left = rand(0, 100) + '%';
+      p.style.width = p.style.height = size + 'px';
+      p.style.background = pick(colors);
+      p.style.animationDuration = rand(9, 18) + 's';
+      p.style.animationDelay = -rand(0, 18) + 's';
+      p.style.setProperty('--drift', rand(-90, 90) + 'px');
+      p.style.setProperty('--spin', rand(180, 720) + 'deg');
+      box.appendChild(p);
+    }
+  }
+
+  draw();
+  petals();
+
+  // Redraw on width changes (ignore mobile address-bar height jitter)
+  let lastW = window.innerWidth, timer;
+  window.addEventListener('resize', () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      if (window.innerWidth !== lastW) {
+        lastW = window.innerWidth;
+        draw();
+      }
+    }, 250);
+  });
+</script>
+</body>
+</html>
